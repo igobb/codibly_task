@@ -1,4 +1,4 @@
-#Codibly recruitment task
+# Codibly recruitment task
 
 ## About
 * [Introduction](#introduction)
