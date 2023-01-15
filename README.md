@@ -15,7 +15,6 @@ This is a recruiting task for the Codibly recruiting process
 ## Technologies Used
 * React
 * Material UI
-* SCSS
 * API
 
 ## Setup
