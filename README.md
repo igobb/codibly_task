@@ -29,7 +29,7 @@ npm start
 ```
 
 ## Project Status
-Project is: _incomplete_
+Project is: _complete_
 
 
 ## Contact
