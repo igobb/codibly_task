@@ -1,4 +1,5 @@
 .error {
+    color: var(--gray-color);
     display: flex;
     flex-direction: column;
 }
