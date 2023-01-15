@@ -9,6 +9,10 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import axios from "axios";
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Modal from '@mui/material/Modal';
+import './TableWithPagination.css'
 
 //Style for table
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -25,7 +29,17 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 export default function TableWithData() {
 
     //Getting data from API
-    const [ourData, setOurData] = useState([]);
+    const [ourData, setOurData] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [open, setOpen] = useState(false);
+    //Setting the page on which the table should be opened and the number of rows per page
+    const [page, setPage] = useState(null);
+    const [rowsPerPage, setRowsPerPage] = useState(null);
+    //Storing the number entered in input
+    const [query, setQuery] = useState('');
+    //Storing error object
+    const [errorData, setErrorData] = useState(null);
+
 
     useEffect(() => {
         axios
@@ -34,11 +48,14 @@ export default function TableWithData() {
             //Using 'setOurData' to storage data from API
             .then((response) => {
                 setOurData(response.data);
+                setPage(response.data.page - 1);
+                setRowsPerPage(response.data.per_page -1)
                 console.log('Data ok')
             })
             //Catching errors
             .catch((error) => {
                 //errors from 400 to 599
+                setErrorData(error)
                 if(error.request.status < 600 && error.request.status > 399) {
                     console.log(`${error.message}, error code: ${error.code}`);
                     //If the error is in a different range, print it to the console
@@ -48,19 +65,13 @@ export default function TableWithData() {
             });
     }, []);
 
-    //Assigning to a constant variable information about products from 'ourData'
-    const data = ourData.data
 
-    //destructuring
-    const {
-        per_page: perPage,
-        page: whichPage
-    } = ourData
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const myParam = urlParams.get(`search`);
 
-    //Setting the page on which the table should be opened and the number of rows per page
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
+        myParam && setQuery(myParam);
+    }, []);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -71,61 +82,107 @@ export default function TableWithData() {
         setPage(0);
     };
 
-    //Storing the number entered in input
-    const [query, setQuery] = useState('');
+    const style = {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        border: '2px solid #000',
+        boxShadow: 24,
+        p: 4,
+    };
 
     return (
-        <Paper sx={{ minWidth: '40%', overflow: 'hidden', backgroundColor: 'var(--secondary-color)' }} elevation={24} >
-            <input
-                //Blocking the possibility of entering text
-                type="number"
-                value={query}
-                // value={query}
-                placeholder="Filter data by ID"
-                //Reaction to every change of the input field - storing the field value in 'setQuery'
-                onChange={e => setQuery(e.target.value)}
-                style={{display: 'flex', justifyContent: 'center', margin: 'auto', padding: '0.5rem 0.3rem', paddingLeft: '1rem', marginBottom: '1rem', marginTop: '1rem', fontSize: '1.5rem', borderRadius: '10px'}}/>
-            <TableContainer component={Paper} sx={{width: 1}}>
-                <Table aria-label="customized table">
-                    <TableHead>
-                        <TableRow>
-                            <StyledTableCell>ID</StyledTableCell>
-                            <StyledTableCell align="right">Name</StyledTableCell>
-                            <StyledTableCell align="right">Year</StyledTableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {data?.length > 0 &&
-                            data?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                //Filtering the received array by product ID - will display the product with the same ID as stored in 'query'
-                                .filter((someId) => someId.id.toString().includes(query))
-                                .map((row) => (
-                                    <TableRow key={row.id}
-                                              sx={{backgroundColor: row.color}}
-                                    >
-                                        <StyledTableCell component="th" scope="row">
-                                            {row.id}
-                                        </StyledTableCell>
-                                        <StyledTableCell align="right">
-                                            {row.name}
-                                        </StyledTableCell>
-                                        <StyledTableCell align="right">
-                                            {row.year}
-                                        </StyledTableCell>
+        <>
+            { ourData ?
+                <>
+                    <Paper sx={{ minWidth: '40%', overflow: 'hidden', backgroundColor: 'var(--secondary-color)' }} elevation={24} >
+                        <input
+                            //Blocking the possibility of entering text
+                            type="number"
+                            value={query}
+                            // value={query}
+                            placeholder="Filter data by ID"
+                            //Reaction to every change of the input field - storing the field value in 'setQuery'
+                            onChange={e => setQuery(e.target.value), e => {(e.target.value > 0 && e.target.value <= ourData.data.length) ? window.location.search = `search=${e.target.value}` : window.location.search = ''}}
+                            style={{display: 'flex', justifyContent: 'center', margin: 'auto', padding: '0.5rem 0.3rem', paddingLeft: '1rem', marginBottom: '1rem', marginTop: '1rem', fontSize: '1.5rem', borderRadius: '10px'}}/>
+                        <TableContainer component={Paper} sx={{width: 1}}>
+                            <Table aria-label="customized table">
+                                <TableHead>
+                                    <TableRow>
+                                        <StyledTableCell>ID</StyledTableCell>
+                                        <StyledTableCell align="right">Name</StyledTableCell>
+                                        <StyledTableCell align="right">Year</StyledTableCell>
                                     </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[]}
-                component="div"
-                count= {perPage}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-        </Paper>
+                                </TableHead>
+                                <TableBody>
+                                    {ourData.data?.length > 0 &&
+                                        ourData.data?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                            //Filtering the received array by product ID - will display the product with the same ID as stored in 'query'
+                                            .filter((someId) => someId.id.toString().includes(query))
+                                            .map(elements => {console.log(elements); return elements;})
+                                            .map((row) => (
+                                                <TableRow key={row.id} onClick={() => {setSelectedItem(row); setOpen(true)}}
+                                                          sx={{backgroundColor: row.color}}
+                                                >
+                                                    <StyledTableCell component="th" scope="row">
+                                                        {row.id}
+                                                    </StyledTableCell>
+                                                    <StyledTableCell align="right">
+                                                        {row.name}
+                                                    </StyledTableCell>
+                                                    <StyledTableCell align="right">
+                                                        {row.year}
+                                                    </StyledTableCell>
+                                                </TableRow>
+                                            ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <TablePagination
+                            rowsPerPageOptions={[]}
+                            component="div"
+                            count= {ourData?.total}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        />
+                    </Paper>
+                    {selectedItem && <Modal
+                        open={open}
+                        onClose={() => setOpen(false)}
+                        aria-labelledby="modal-modal-title"
+                        aria-describedby="modal-modal-description"
+                        >
+                            <Box sx={style}>
+                                <Typography id="modal-modal-title" variant="h6" component="h2">
+                                <p>{selectedItem.name.toUpperCase()} ALL DATA</p>
+                                </Typography>
+                                <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                                    <p>ID: {selectedItem.id}</p>
+                                    <p>Name: {selectedItem.name}</p>
+                                    <p>Year: {selectedItem.year}</p>
+                                    <p>Color: {selectedItem.color}</p>
+                                    <p>Pantone value: {selectedItem.pantone_value}</p>
+                                </Typography>
+                            </Box>
+                        </Modal>}
+                </>
+                :
+                <div className="error">
+                    {(errorData?.request.status < 600 && errorData?.request.status > 399) ?
+                        <>
+                            <h1>Sorry, we have a problem...</h1>
+                            <p>{errorData?.message}</p>
+                        </>:
+                        <>
+                            <h1>Sorry, we have a problem...</h1>
+                        </>}
+                </div>
+            }
+        </>
     );
 }
