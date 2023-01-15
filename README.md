@@ -19,10 +19,15 @@ This is a recruiting task for the Codibly recruiting process
 * API
 
 ## Setup
-To run this project, open this link:
+To run this project, follow these steps:
 
+1. Clone the repository to your local machine.
+2. Open the 'codibly_task' directory as a project in your IDE.
+3. In the terminal, enter one of the following command:
 
-⭐ <a href="">Codibly task</a> ⭐
+```
+npm start
+```
 
 ## Project Status
 Project is: _incomplete_
