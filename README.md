@@ -9,7 +9,7 @@
 
 
 ## Introduction
-This is a recruiting task for the Codibly recruiting process
+This is a recruiting task for the Codibly recruiting process.
 
 
 ## Technologies Used
